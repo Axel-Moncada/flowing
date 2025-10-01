@@ -4,7 +4,7 @@
 
 
 :root {
-  --background: #ffffff;
+  --background: #FFFEEE;
   --foreground: #171717;
 }
 
@@ -19,6 +19,9 @@
   --color-gris: #4A4A4A;  
   --color-crema: #FFFEEE;  
 
+
+
+  --font-weight-extrabold:1000
 
 }
 
