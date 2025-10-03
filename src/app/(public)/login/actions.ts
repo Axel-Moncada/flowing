@@ -24,7 +24,7 @@ export async function login(prevState: any, formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/private')
+  redirect('/profile')
 }
 
 export async function signup(prevState: any, formData: FormData) {
@@ -59,6 +59,8 @@ export async function signup(prevState: any, formData: FormData) {
  
   
 }
+
+
 
 export async function loginWithGoogle() {
   const supabase = await createClient()
