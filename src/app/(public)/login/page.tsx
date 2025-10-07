@@ -1,11 +1,11 @@
 ﻿'use client'
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'  // Note: from 'react', not 'react-dom'
 import { login, signup, loginWithGoogle } from "./actions";
 import Navbar from "@/app/components/navbar";
 
-export default function LoginPage() {2
-  const [loginState, loginAction] = useFormState(login, { error: '', success: false })
-  const [signupState, signupAction] = useFormState(signup, undefined)
+export default function LoginPage() {
+  const [loginState, loginAction] = useActionState(login, { error: '', success: false })
+  const [signupState, signupAction] = useActionState(signup, { error: '', success: false })
 
   return (
     <>
@@ -124,7 +124,7 @@ export default function LoginPage() {2
             </label>
             <input
               id="email-user"
-              name="email"
+              name="email-user"
               type="email"
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -140,7 +140,7 @@ export default function LoginPage() {2
             </label>
             <input
               id="password-user"
-              name="password"
+              name="password-user"
               type="password"
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"

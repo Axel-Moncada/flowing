@@ -74,13 +74,19 @@ export const SidebarNav = ({ user }: SidebarProps) => {
         <div className="flex-1 overflow-y-auto justify-center flex">
           <SidebarGroup>
             <SidebarGroupContent>
-              <img
-                src={logo.src}
-                alt="Logo"
-                className="w-3/4  p-5 mx-auto mt-10 group-data-[collapsible=icon]:w-3/4 group-data-[collapsible=icon]:p-0"
-              />
+              {logo?.src ? (
+                <img
+                  src={logo.src}
+                  alt="Logo"
+                  className="w-3/4  p-5 mx-auto mt-10 group-data-[collapsible=icon]:w-3/4 group-data-[collapsible=icon]:p-0"
+                />
+              ) : (
+                <div className="w-3/4 h-16 bg-verde/20 mx-auto mt-10 flex items-center justify-center rounded">
+                  <span className="text-verde font-bold">LOGO</span>
+                </div>
+              )}
               <SidebarMenu className="text-crema mt-20 group-data-[collapsible=icon]:mt-10">
-                {items.map((item) => (
+                {items && items.length > 0 ? items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <Link
@@ -94,7 +100,7 @@ export const SidebarNav = ({ user }: SidebarProps) => {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
+                )) : <div>No hay elementos del menú</div>}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

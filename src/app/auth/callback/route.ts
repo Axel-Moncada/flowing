@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         .from('profiles')
         .upsert({
           id: data.user.id,
-          full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
+          username: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
           email: data.user.email,
           avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null,
           updated_at: new Date().toISOString(),
