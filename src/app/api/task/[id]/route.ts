@@ -13,29 +13,25 @@ export async function PATCH(
     const params = await context.params;
     const taskId = params.id;
     
-    console.log('📝 PATCH /api/task/' + taskId);
+   
     
     const supabase = await createClient();
     
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-
     if (authError || !user) {
       console.error('❌ No autenticado');
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });    }
 
     // Obtener los datos a actualizar
     const body = await request.json();
-    console.log('📦 Body recibido:', body);
-    
+   
     const { state } = body;
-
     if (!state) {
       return NextResponse.json({ error: "State is required" }, { status: 400 });
     }
 
-    // Primero verificar si la tarea existe y el usuario tiene acceso
+   
     const { data: existingTask, error: fetchError } = await supabase
       .from("task")
       .select("id, state")
@@ -54,7 +50,7 @@ export async function PATCH(
       }, { status: 404 });
     }
 
-    console.log('📋 Tarea encontrada, actualizando...');
+   
 
     // Actualizar la tarea
     const { data: updatedTask, error: updateError } = await supabase
@@ -77,7 +73,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
     }
 
-    console.log('✅ Tarea actualizada');
+   
     return NextResponse.json({ 
       message: "Task updated successfully",
       task: updatedTask 

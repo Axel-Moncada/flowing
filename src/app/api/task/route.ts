@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
           `
           *,
           task_assignees (
+            points,
             profiles (
               id,
               email,
@@ -111,7 +112,10 @@ export async function GET(request: NextRequest) {
         createdby,
         created_at,
         updated_at,
+        puntosAsign,
+        puntosTotal,
         task_assignees (
+          points,
           profiles (
             id,
             email,
@@ -151,3 +155,96 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+/**
+ * API Route para crear una nueva tarea
+ * 
+ * @param request - Objeto NextRequest con los datos de la tarea en el body
+ * @returns Promise<NextResponse> - Respuesta JSON con la tarea creada o mensaje de error
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Obtener el cliente de Supabase y el usuario autenticado
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    // Verificar autenticación
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Obtener el primer equipo del usuario
+    const { data: memberships, error: membershipError } = await supabase
+      .from("team_memberships")
+      .select("teamid")
+      .eq("userid", user.id)
+      .limit(1);
+
+    if (membershipError || !memberships || memberships.length === 0) {
+      return NextResponse.json(
+        { error: "User not in any team" },
+        { status: 404 }
+      );
+    }
+
+    const teamId = memberships[0].teamid;
+
+    // Parsear el body de la petición
+    const body = await request.json();
+    const { title, category, priority, description, state } = body;
+
+    // Validar campos requeridos
+    if (!title || !category || !description) {
+      return NextResponse.json(
+        { error: "Missing required fields: title, category, description" },
+        { status: 400 }
+      );
+    }
+
+    // Crear la tarea en Supabase
+    const { data: newTask, error: createError } = await supabase
+      .from("task")
+      .insert({
+        title,
+        teamid: teamId,
+        category,
+        priority: priority || "media",
+        state: state || "backlog",
+        description,
+        createdby: user.id,
+        
+        puntosAsign: 0,
+        puntosTotal: 0,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error("Error creating task:", createError);
+      return NextResponse.json(
+        { error: "Failed to create task", details: createError.message },
+        { status: 500 }
+      );
+    }
+
+    // La tarea se crea sin asignar a nadie por defecto
+    return NextResponse.json(
+      { 
+        message: "Task created successfully", 
+        task: newTask 
+      },
+      { status: 201 }
+    );
+
+  } catch (error) {
+    console.error("Error in POST /api/task:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+

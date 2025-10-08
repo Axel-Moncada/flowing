@@ -17,6 +17,13 @@
   --color-gris: #4A4A4A;  
   --color-crema: #FFFEEE;  
 
+  --color-backlog : #4097CD;  
+  --color-en_progreso : #17CF3F;  
+  --color-en_revision : #F20D11;  
+  --color-finalizado : #C7EF4D;  
+
+  
+
   --font-weight-extrabold:1000
 
 ;  

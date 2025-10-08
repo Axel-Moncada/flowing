@@ -1,9 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BtnMain } from "../../components/Uitools";
 import { CircleSmall, Settings, GripVertical, Clock, Tag } from "lucide-react";
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
-import { createClient } from "@/app/utils/supabase/clients"; // 👈 Importar supabase client
+import { createClient } from "@/app/utils/supabase/clients";
+import CreateTaskModal from "@/app/components/CreateTaskModal";
+import ShowMore from "@/app/components/ShowMore";
 
 // ========================================
 // COMPONENTE COLUMN (Droppable)
@@ -14,7 +16,7 @@ function Column({ id, title, children, color }) {
   return (
     <div 
       ref={setNodeRef}
-      className={`rounded-lg p-4 transition-colors ${isOver ? 'bg-blue-50' : ''}`}
+      className={`rounded-lg p-4 transition-colors ${isOver ? 'bg-verde/20' : ''}`}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -36,7 +38,12 @@ function Column({ id, title, children, color }) {
 // ========================================
 // COMPONENTE TASKCARD (Draggable)
 // ========================================
-function TaskCard({ task }) {
+function TaskCard({ task, onTaskUpdate }) {
+
+const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+const handleOpenDetail = () => setIsDetailModalOpen(true);
+const handleCloseDetail = () => setIsDetailModalOpen(false);
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -44,6 +51,9 @@ function TaskCard({ task }) {
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
+
+
+
   
   return (
     <div
@@ -62,7 +72,7 @@ function TaskCard({ task }) {
         <GripVertical className="text-gray-400" />
       </div>
 
-      <div className="time flex items-center gap-1 mb-3">
+      <div className="time flex items-center gap-1 ">
         <Clock className="text-gray-400" height={18} />
         <p className="text-sm text-verde">
           {new Date(task.created_at).toLocaleDateString()}
@@ -71,12 +81,22 @@ function TaskCard({ task }) {
 
       <div className="category flex items-center gap-1 mb-3">
         <Tag className="text-gray-400" height={18} />
-        <span className="bg-blue-500 text-sm text-white rounded-2xl py-1 w-40 px-5">
+        <span className="text-sm text-gray-300 rounded-2xl w-40 ">
           {task.category}
         </span>
       </div>
 
-      <p className="text-sm text-crema mb-4">
+      <p 
+        className="text-sm text-crema mb-4"
+        style={{
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          wordBreak: 'break-all'
+        }}
+      >
         {task.description}
       </p>
 
@@ -97,7 +117,7 @@ function TaskCard({ task }) {
       {/* Avatares */}
       <div className="flex justify-between items-center">
         <div className="flex -space-x-2">
-          {task.task_assignees
+          {task.task_assignees && task.task_assignees.length > 0 && task.task_assignees
             ?.filter((assignee) => assignee.profiles !== null)
             .map((assignee, index) => {
               const profile = assignee.profiles;
@@ -133,7 +153,17 @@ function TaskCard({ task }) {
               );
             })}
         </div>
-        <BtnMain text="Ver mas" size="sm" weight="bold" />
+
+        <div onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+          <BtnMain text="Ver mas" size="sm" weight="bold" onClick={handleOpenDetail} />
+        </div>
+
+        <ShowMore 
+          isOpen={isDetailModalOpen} 
+          onClose={handleCloseDetail} 
+          task={task}
+          onTaskUpdate={onTaskUpdate}
+        />
       </div>
     </div>
   );
@@ -148,23 +178,32 @@ export default function DashboardPage() {
   const [error, setError] = useState(null);
   const [teamName, setTeamName] = useState("");
   const [activeFilter, setActiveFilter] = useState("team");
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+  const handleTaskCreated = () => {
+    fetchTask(); // Recargar las tareas cuando se crea una nueva
+    handleCloseModal();
+  };
 
-  const fetchTask = async (filter = "team") => {
+  const fetchTask = async () => {
     try {
       setLoading(true);
-      setActiveFilter(filter);
-      const response = await fetch(`/api/task?filter=${filter}`);
+      console.log('📥 Cargando tareas... Filtro activo actual:', activeFilter);
+      
+      const response = await fetch(`/api/task?filter=team`); // Siempre traer TODAS las tareas del team
       if (!response.ok) throw new Error("Error en api task");
       const data = await response.json();
       setTasks(data.tasks || []);
+      
+      console.log('✅ Tareas cargadas:', data.tasks?.length, 'Filtro sigue siendo:', activeFilter);
 
       if (data.teamName) {
         setTeamName(data.teamName);
       }
-
-      console.log("📊 respuesta data:", data);
-      console.log("👥 Primera tarea con assignees:", data.tasks?.[0]?.task_assignees);
+      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -191,8 +230,6 @@ export default function DashboardPage() {
           : task
       )
     );
-
-    console.log(`Tarea ${taskId} movida a ${newState}`);
     
     // Actualizar en la base de datos
     try {
@@ -206,7 +243,9 @@ export default function DashboardPage() {
         throw new Error('Error al actualizar la tarea');
       }
       
-      console.log('✅ Tarea actualizada en la base de datos');
+      // NO recargar aquí - el update optimista ya actualizó la UI
+      // Realtime se encargará de sincronizar si hay cambios de otros usuarios
+      
     } catch (error) {
       console.error('❌ Error al actualizar tarea:', error);
       // Revertir el cambio si falla
@@ -216,62 +255,60 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    // Obtener el usuario actual
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id);
+    };
+    
+    fetchUser();
     fetchTask();
     
-    // 🔄 SUPABASE REALTIME - Sincronización en tiempo real
     const supabase = createClient();
     
-    // Crear canal de realtime
     const channel = supabase
-      .channel('task-changes') // Nombre del canal
+      .channel('task-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Escuchar todos los eventos: INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
           table: 'task'
         },
         (payload) => {
-          console.log('🔄 Cambio detectado en tiempo real:', payload);
-          
-          // Recargar tareas cuando hay un cambio
-          // Usamos el filtro actual para no perder el contexto
-          fetchTask(activeFilter);
+          console.log('🔄 Realtime: Recargando tareas sin cambiar el filtro');
+          // Recargar todas las tareas SIN cambiar activeFilter
+          fetchTask();
         }
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Conectado a Realtime');
-        }
-        if (status === 'CLOSED') {
-          console.log('❌ Desconectado de Realtime');
-        }
-      });
+      .subscribe();
 
-    // Cleanup: Desuscribirse cuando el componente se desmonta
     return () => {
-      console.log('🧹 Limpiando suscripción de Realtime');
       supabase.removeChannel(channel);
     };
-  }, [activeFilter]);
+  }, []);
+
+  // Filtrar las tareas según el filtro activo
+  console.log('🔍 Filtrando tareas - Filtro activo:', activeFilter, 'Usuario ID:', currentUserId, 'Total tareas:', tasks.length);
+  
+  const filteredTasks = activeFilter === "my" && currentUserId
+    ? tasks.filter(task => 
+        task.task_assignees?.some(assignee => assignee.profiles?.id === currentUserId)
+      )
+    : tasks;
+  
+  console.log('✅ Tareas filtradas:', filteredTasks.length);
 
   // Agrupar tareas por estado
   const tasksByState = {
-    backlog: tasks.filter(t => t.state === 'backlog'),
-    en_progreso: tasks.filter(t => t.state === 'en_progreso'),
-    en_revision: tasks.filter(t => t.state === 'en_revision'),
-    finalizado: tasks.filter(t => t.state === 'finalizado')
+    backlog: filteredTasks.filter(t => t.state === 'backlog'),
+    en_progreso: filteredTasks.filter(t => t.state === 'en_progreso'),
+    en_revision: filteredTasks.filter(t => t.state === 'en_revision'),
+    finalizado: filteredTasks.filter(t => t.state === 'finalizado')
   };
 
-  // 🔍 DEBUG: Ver qué tareas y estados tenemos
-  console.log('📊 Total de tareas:', tasks.length);
-  console.log('🔍 Estados únicos:', [...new Set(tasks.map(t => t.state))]);
-  console.log('📋 Tareas por estado:', {
-    backlog: tasksByState.backlog.length,
-    en_progreso: tasksByState.en_progreso.length,
-    en_revision: tasksByState.en_revision.length,
-    finalizado: tasksByState.finalizado.length
-  });
+  
 
   return (
     <div className="container w-screen">
@@ -286,9 +323,16 @@ export default function DashboardPage() {
         </div>
 
         <div className="col-start-9 align-self-center justify-self-end">
-          <BtnMain text="Nueva tarea" size="lg" weight="semibold" />
+          <BtnMain text="Nueva tarea" size="lg" weight="semibold" onClick={handleOpenModal} />
         </div>
       </div>
+
+      {/* Modal para crear tarea */}
+      <CreateTaskModal 
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal} 
+        onTaskCreated={handleTaskCreated} 
+      />
 
       <div className="kanba">
         {/* Botones de filtro */}
@@ -296,7 +340,7 @@ export default function DashboardPage() {
           className={`btn btn-primary px-10 py-3 rounded-2xl text-sm font-semibold mx-5 my-2 ${
             activeFilter === "my" ? "bg-gris text-crema" : "bg-verde text-black"
           }`}
-          onClick={() => fetchTask("my")}
+          onClick={() => setActiveFilter("my")}
         >
           Mis tareas
         </button>
@@ -305,7 +349,7 @@ export default function DashboardPage() {
           className={`btn btn-primary px-10 py-3 rounded-2xl text-sm font-semibold ${
             activeFilter === "team" ? "bg-gris text-crema" : "bg-verde text-black"
           }`}
-          onClick={() => fetchTask("team")}
+          onClick={() => setActiveFilter("team")}
         >
           Tareas team
         </button>
@@ -318,28 +362,28 @@ export default function DashboardPage() {
               {/* COLUMNA BACKLOG */}
               <Column id="backlog" title="Backlog" color="#4D6BA8">
                 {tasksByState.backlog.map(task => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
                 ))}
               </Column>
 
               {/* COLUMNA EN PROGRESO */}
               <Column id="en_progreso" title="En curso" color="#17CF3F">
                 {tasksByState.en_progreso.map(task => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
                 ))}
               </Column>
 
               {/* COLUMNA EN REVISIÓN */}
               <Column id="en_revision" title="En revisión" color="#F20D11">
                 {tasksByState.en_revision.map(task => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
                 ))}
               </Column>
 
               {/* COLUMNA FINALIZADO */}
               <Column id="finalizado" title="Finalizado" color="#C7EF4D">
                 {tasksByState.finalizado.map(task => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
                 ))}
               </Column>
 
