@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { BtnMain } from "../../components/Uitools";
 import { CircleSmall, Settings, GripVertical, Clock, Tag } from "lucide-react";
-import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
+import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { createClient } from "@/app/utils/supabase/clients";
 import CreateTaskModal from "@/app/components/CreateTaskModal";
 import ShowMore from "@/app/components/ShowMore";
@@ -12,11 +12,13 @@ import ShowMore from "@/app/components/ShowMore";
 // ========================================
 function Column({ id, title, children, color }) {
   const { setNodeRef, isOver } = useDroppable({ id });
-  
+
   return (
-    <div 
+    <div
       ref={setNodeRef}
-      className={`rounded-lg p-4 transition-colors ${isOver ? 'bg-verde/20' : ''}`}
+      className={`rounded-lg p-4 transition-colors ${
+        isOver ? "bg-verde/20" : ""
+      }`}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -27,10 +29,8 @@ function Column({ id, title, children, color }) {
           {Array.isArray(children) ? children.length : children ? 1 : 0}
         </span>
       </div>
-      
-      <div className="space-y-3">
-        {children}
-      </div>
+
+      <div className="space-y-3">{children}</div>
     </div>
   );
 }
@@ -38,23 +38,18 @@ function Column({ id, title, children, color }) {
 // ========================================
 // COMPONENTE TASKCARD (Draggable)
 // ========================================
-function TaskCard({ task, onTaskUpdate }) {
+function TaskCard({ task, onTaskUpdate, onOpenDetail }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: task.id,
+    });
 
-const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-const handleOpenDetail = () => setIsDetailModalOpen(true);
-const handleCloseDetail = () => setIsDetailModalOpen(false);
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: task.id,
-  });
-
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
-
-
-
-  
   return (
     <div
       ref={setNodeRef}
@@ -62,7 +57,7 @@ const handleCloseDetail = () => setIsDetailModalOpen(false);
       {...listeners}
       {...attributes}
       className={`bg-[#6C6C6C] rounded-2xl p-4 mb-5 cursor-grab active:cursor-grabbing ${
-        isDragging ? 'opacity-50' : ''
+        isDragging ? "opacity-50" : ""
       }`}
     >
       <div className="flex justify-between items-start">
@@ -86,15 +81,15 @@ const handleCloseDetail = () => setIsDetailModalOpen(false);
         </span>
       </div>
 
-      <p 
+      <p
         className="text-sm text-crema mb-4"
         style={{
-          display: '-webkit-box',
+          display: "-webkit-box",
           WebkitLineClamp: 3,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          wordBreak: 'break-all'
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          wordBreak: "break-all",
         }}
       >
         {task.description}
@@ -117,53 +112,53 @@ const handleCloseDetail = () => setIsDetailModalOpen(false);
       {/* Avatares */}
       <div className="flex justify-between items-center">
         <div className="flex -space-x-2">
-          {task.task_assignees && task.task_assignees.length > 0 && task.task_assignees
-            ?.filter((assignee) => assignee.profiles !== null)
-            .map((assignee, index) => {
-              const profile = assignee.profiles;
-              const initials = (profile.username || profile.email || "??").substring(0, 2).toUpperCase();
-              
-              return (
-                <div
-                  key={profile.id || index}
-                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#6C6C6C] shadow-lg"
-                  title={profile.username || profile.email}
-                >
-                  {profile.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={initials}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Si la imagen falla, mostrar iniciales
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
-                    style={{ display: profile.avatar_url ? 'none' : 'flex' }}
+          {task.task_assignees &&
+            task.task_assignees.length > 0 &&
+            task.task_assignees
+              ?.filter((assignee) => assignee.profiles !== null)
+              .map((assignee, index) => {
+                const profile = assignee.profiles;
+                const initials = (profile.username || profile.email || "??")
+                  .substring(0, 2)
+                  .toUpperCase();
+
+                return (
+                  <div
+                    key={profile.id || index}
+                    className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#6C6C6C] shadow-lg"
+                    title={profile.username || profile.email}
                   >
-                    <span className="text-white text-xs font-bold">
-                      {initials}
-                    </span>
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt={initials}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Si la imagen falla, mostrar iniciales
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+                      style={{ display: profile.avatar_url ? "none" : "flex" }}
+                    >
+                      <span className="text-white text-xs font-bold">
+                        {initials}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
         </div>
 
-        <div onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-          <BtnMain text="Ver mas" size="sm" weight="bold" onClick={handleOpenDetail} />
+        <div
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+         <BtnMain text="Ver mas" size="sm" weight="bold" onClick={() => onOpenDetail(task)} />
         </div>
-
-        <ShowMore 
-          isOpen={isDetailModalOpen} 
-          onClose={handleCloseDetail} 
-          task={task}
-          onTaskUpdate={onTaskUpdate}
-        />
       </div>
     </div>
   );
@@ -181,29 +176,57 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+
+    const isFetchingRef = useRef(false);
+
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
+
+  
+  const handleOpenDetail = (task) => {
+    setSelectedTask(task);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setIsDetailModalOpen(false);
+    setSelectedTask(null);
+  };
+
   const handleTaskCreated = () => {
-    fetchTask(); // Recargar las tareas cuando se crea una nueva
+    fetchTask();
     handleCloseModal();
   };
 
   const fetchTask = async () => {
+  
+    if (isFetchingRef.current) {
+      console.log("⏸️ Ya hay una petición en curso, saltando...");
+      return;
+    }
+
     try {
       setLoading(true);
-      console.log('📥 Cargando tareas... Filtro activo actual:', activeFilter);
-      
+      console.log("📥 Cargando tareas... Filtro activo actual:", activeFilter);
+
       const response = await fetch(`/api/task?filter=team`); // Siempre traer TODAS las tareas del team
       if (!response.ok) throw new Error("Error en api task");
       const data = await response.json();
       setTasks(data.tasks || []);
-      
-      console.log('✅ Tareas cargadas:', data.tasks?.length, 'Filtro sigue siendo:', activeFilter);
+
+      console.log(
+        "✅ Tareas cargadas:",
+        data.tasks?.length,
+        "Filtro sigue siendo:",
+        activeFilter
+      );
 
       if (data.teamName) {
         setTeamName(data.teamName);
       }
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -213,102 +236,116 @@ export default function DashboardPage() {
 
   const handleDragEnd = async (event) => {
     const { active, over } = event;
-    
+
     if (!over) return;
-    
+
     const taskId = active.id;
     const newState = over.id;
-    
+
     // Guardar el estado anterior por si falla
     const previousTasks = tasks;
-    
+
     // Actualizar el estado local (optimistic update)
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskId
-          ? { ...task, state: newState }
-          : task
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId ? { ...task, state: newState } : task
       )
     );
-    
+
     // Actualizar en la base de datos
     try {
       const response = await fetch(`/api/task/${taskId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state: newState })
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: newState }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Error al actualizar la tarea');
+        throw new Error("Error al actualizar la tarea");
       }
-      
+
       // NO recargar aquí - el update optimista ya actualizó la UI
       // Realtime se encargará de sincronizar si hay cambios de otros usuarios
-      
     } catch (error) {
-      console.error('❌ Error al actualizar tarea:', error);
+      console.error("❌ Error al actualizar tarea:", error);
       // Revertir el cambio si falla
       setTasks(previousTasks);
-      alert('Error al mover la tarea. Intenta de nuevo.');
+      alert("Error al mover la tarea. Intenta de nuevo.");
     }
   };
 
   useEffect(() => {
-    // Obtener el usuario actual
     const fetchUser = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id);
     };
-    
-    fetchUser();
+
+     fetchUser();
     fetchTask();
-    
+  }, []); 
+
+
+     useEffect(() => {
     const supabase = createClient();
     
+    // Debounce timer
+    let timeoutId;
+
     const channel = supabase
-      .channel('task-changes')
+      .channel("task-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'task'
+          event: "*",
+          schema: "public",
+          table: "task",
         },
         (payload) => {
-          console.log('🔄 Realtime: Recargando tareas sin cambiar el filtro');
-          // Recargar todas las tareas SIN cambiar activeFilter
-          fetchTask();
+          console.log("🔄 Realtime: Cambio detectado");
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            console.log("🔄 Realtime: Recargando tareas...");
+            fetchTask();
+          }, 500);
         }
       )
       .subscribe();
 
-    return () => {
+  return () => {
+      clearTimeout(timeoutId);
       supabase.removeChannel(channel);
     };
   }, []);
 
   // Filtrar las tareas según el filtro activo
-  console.log('🔍 Filtrando tareas - Filtro activo:', activeFilter, 'Usuario ID:', currentUserId, 'Total tareas:', tasks.length);
-  
-  const filteredTasks = activeFilter === "my" && currentUserId
-    ? tasks.filter(task => 
-        task.task_assignees?.some(assignee => assignee.profiles?.id === currentUserId)
-      )
-    : tasks;
-  
-  console.log('✅ Tareas filtradas:', filteredTasks.length);
+  console.log(
+    "🔍 Filtrando tareas - Filtro activo:",
+    activeFilter,
+    "Usuario ID:",
+    currentUserId,
+    "Total tareas:",
+    tasks.length
+  );
+
+  const filteredTasks =
+    activeFilter === "my" && currentUserId
+      ? tasks.filter((task) =>
+          task.task_assignees?.some(
+            (assignee) => assignee.profiles?.id === currentUserId
+          )
+        )
+      : tasks;
+
+  console.log("✅ Tareas filtradas:", filteredTasks.length);
 
   // Agrupar tareas por estado
   const tasksByState = {
-    backlog: filteredTasks.filter(t => t.state === 'backlog'),
-    en_progreso: filteredTasks.filter(t => t.state === 'en_progreso'),
-    en_revision: filteredTasks.filter(t => t.state === 'en_revision'),
-    finalizado: filteredTasks.filter(t => t.state === 'finalizado')
+    backlog: filteredTasks.filter((t) => t.state === "backlog"),
+    en_progreso: filteredTasks.filter((t) => t.state === "en_progreso"),
+    en_revision: filteredTasks.filter((t) => t.state === "en_revision"),
+    finalizado: filteredTasks.filter((t) => t.state === "finalizado"),
   };
-
-  
 
   return (
     <div className="container w-screen">
@@ -323,15 +360,20 @@ export default function DashboardPage() {
         </div>
 
         <div className="col-start-9 align-self-center justify-self-end">
-          <BtnMain text="Nueva tarea" size="lg" weight="semibold" onClick={handleOpenModal} />
+          <BtnMain
+            text="Nueva tarea"
+            size="lg"
+            weight="semibold"
+            onClick={handleOpenModal}
+          />
         </div>
       </div>
 
       {/* Modal para crear tarea */}
-      <CreateTaskModal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
-        onTaskCreated={handleTaskCreated} 
+      <CreateTaskModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onTaskCreated={handleTaskCreated}
       />
 
       <div className="kanba">
@@ -347,7 +389,9 @@ export default function DashboardPage() {
 
         <button
           className={`btn btn-primary px-10 py-3 rounded-2xl text-sm font-semibold ${
-            activeFilter === "team" ? "bg-gris text-crema" : "bg-verde text-black"
+            activeFilter === "team"
+              ? "bg-gris text-crema"
+              : "bg-verde text-black"
           }`}
           onClick={() => setActiveFilter("team")}
         >
@@ -358,38 +402,64 @@ export default function DashboardPage() {
         <div className="container w-full">
           <DndContext onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-4 gap-6 mt-20">
-              
               {/* COLUMNA BACKLOG */}
               <Column id="backlog" title="Backlog" color="#4D6BA8">
-                {tasksByState.backlog.map(task => (
-                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
+                {tasksByState.backlog.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onTaskUpdate={fetchTask}
+                    onOpenDetail={handleOpenDetail}
+                  />
                 ))}
               </Column>
 
               {/* COLUMNA EN PROGRESO */}
               <Column id="en_progreso" title="En curso" color="#17CF3F">
-                {tasksByState.en_progreso.map(task => (
-                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
+                {tasksByState.en_progreso.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onTaskUpdate={fetchTask}
+                    onOpenDetail={handleOpenDetail}
+                  />
                 ))}
               </Column>
 
               {/* COLUMNA EN REVISIÓN */}
               <Column id="en_revision" title="En revisión" color="#F20D11">
-                {tasksByState.en_revision.map(task => (
-                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
+                {tasksByState.en_revision.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onTaskUpdate={fetchTask}
+                    onOpenDetail={handleOpenDetail}
+                  />
                 ))}
               </Column>
 
               {/* COLUMNA FINALIZADO */}
               <Column id="finalizado" title="Finalizado" color="#C7EF4D">
-                {tasksByState.finalizado.map(task => (
-                  <TaskCard key={task.id} task={task} onTaskUpdate={fetchTask} />
+                {tasksByState.finalizado.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onTaskUpdate={fetchTask}
+                    onOpenDetail={handleOpenDetail}
+                  />
                 ))}
               </Column>
-
             </div>
           </DndContext>
         </div>
+        {selectedTask && (
+          <ShowMore
+            isOpen={isDetailModalOpen}
+            onClose={handleCloseDetail}
+            task={selectedTask}
+            onTaskUpdate={fetchTask}
+          />
+        )}
       </div>
     </div>
   );

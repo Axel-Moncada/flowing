@@ -72,7 +72,6 @@ export async function GET(request: NextRequest) {
           `
           *,
           task_assignees (
-            points,
             profiles (
               id,
               email,
@@ -112,10 +111,7 @@ export async function GET(request: NextRequest) {
         createdby,
         created_at,
         updated_at,
-        puntosAsign,
-        puntosTotal,
         task_assignees (
-          points,
           profiles (
             id,
             email,
