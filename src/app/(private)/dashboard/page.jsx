@@ -157,7 +157,12 @@ function TaskCard({ task, onTaskUpdate, onOpenDetail }) {
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
         >
-         <BtnMain text="Ver mas" size="sm" weight="bold" onClick={() => onOpenDetail(task)} />
+          <BtnMain
+            text="Ver mas"
+            size="sm"
+            weight="bold"
+            onClick={() => onOpenDetail(task)}
+          />
         </div>
       </div>
     </div>
@@ -176,16 +181,14 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
-    const isFetchingRef = useRef(false);
+  const isFetchingRef = useRef(false);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
-  
   const handleOpenDetail = (task) => {
     setSelectedTask(task);
     setIsDetailModalOpen(true);
@@ -202,28 +205,28 @@ export default function DashboardPage() {
   };
 
   const fetchTask = async () => {
-  
     if (isFetchingRef.current) {
-      console.log("⏸️ Ya hay una petición en curso, saltando...");
       return;
     }
 
     try {
       setLoading(true);
-      console.log("📥 Cargando tareas... Filtro activo actual:", activeFilter);
-
-      const response = await fetch(`/api/task?filter=team`); // Siempre traer TODAS las tareas del team
+      const response = await fetch(`/api/task?filter=team`);
       if (!response.ok) throw new Error("Error en api task");
       const data = await response.json();
       setTasks(data.tasks || []);
 
-      console.log(
-        "✅ Tareas cargadas:",
-        data.tasks?.length,
-        "Filtro sigue siendo:",
-        activeFilter
-      );
+      if (selectedTask) {
+        const updated = (data.tasks || []).find(
+          (t) => t.id === selectedTask.id
+        );
+        if (updated) {
+          setSelectedTask(updated);
+        }
+      }
 
+
+      
       if (data.teamName) {
         setTeamName(data.teamName);
       }
@@ -277,18 +280,19 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchUser = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setCurrentUserId(user?.id);
     };
 
-     fetchUser();
+    fetchUser();
     fetchTask();
-  }, []); 
+  }, []);
 
-
-     useEffect(() => {
+  useEffect(() => {
     const supabase = createClient();
-    
+
     // Debounce timer
     let timeoutId;
 
@@ -302,31 +306,21 @@ export default function DashboardPage() {
           table: "task",
         },
         (payload) => {
-          console.log("🔄 Realtime: Cambio detectado");
           clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
-            console.log("🔄 Realtime: Recargando tareas...");
             fetchTask();
           }, 500);
         }
       )
       .subscribe();
 
-  return () => {
+    return () => {
       clearTimeout(timeoutId);
       supabase.removeChannel(channel);
     };
   }, []);
 
   // Filtrar las tareas según el filtro activo
-  console.log(
-    "🔍 Filtrando tareas - Filtro activo:",
-    activeFilter,
-    "Usuario ID:",
-    currentUserId,
-    "Total tareas:",
-    tasks.length
-  );
 
   const filteredTasks =
     activeFilter === "my" && currentUserId
@@ -336,8 +330,6 @@ export default function DashboardPage() {
           )
         )
       : tasks;
-
-  console.log("✅ Tareas filtradas:", filteredTasks.length);
 
   // Agrupar tareas por estado
   const tasksByState = {

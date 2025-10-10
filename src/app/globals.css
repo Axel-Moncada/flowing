@@ -1,4 +1,17 @@
+
+
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.scrollbar-thin::-webkit-scrollbar { width: 6px;  }
+.scrollbar-thin::-webkit-scrollbar-track { border-radius: 9999px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #C7EF4D; border-radius: 9999px; }
+.scrollbar-thin { scrollbar-width: bold; scrollbar-color: #C7EF4D transparent; }
+
 
 @import "tailwindcss";
 
@@ -170,3 +183,30 @@ body {
     @apply border-border outline-ring/50;}
   body {
     @apply bg-background text-foreground;}}
+
+
+
+    /* Scrollbar personalizado */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #3a3a3a;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #9EFF00;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7acc00;
+}
+
+/* Para Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #9EFF00 #3a3a3a;
+}

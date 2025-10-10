@@ -71,7 +71,16 @@ export async function GET(request: NextRequest) {
         .select(
           `
           *,
+          createdby:profiles!task_createdby_fkey(
+              id,
+              email,
+              username,
+              avatar_url
+            ),  
+
           task_assignees (
+            userid,
+            
             profiles (
               id,
               email,
@@ -108,10 +117,14 @@ export async function GET(request: NextRequest) {
         priority,
         state,
         description,
-        createdby,
+              createdby:profiles(id, username, email, avatar_url),
+
         created_at,
         updated_at,
         task_assignees (
+        userid,
+        points,
+
           profiles (
             id,
             email,
@@ -154,7 +167,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * API Route para crear una nueva tarea
- * 
+ *
  * @param request - Objeto NextRequest con los datos de la tarea en el body
  * @returns Promise<NextResponse> - Respuesta JSON con la tarea creada o mensaje de error
  */
@@ -211,8 +224,7 @@ export async function POST(request: NextRequest) {
         state: state || "backlog",
         description,
         createdby: user.id,
-        
-        puntosAsign: 0,
+
         puntosTotal: 0,
       })
       .select()
@@ -228,13 +240,12 @@ export async function POST(request: NextRequest) {
 
     // La tarea se crea sin asignar a nadie por defecto
     return NextResponse.json(
-      { 
-        message: "Task created successfully", 
-        task: newTask 
+      {
+        message: "Task created successfully",
+        task: newTask,
       },
       { status: 201 }
     );
-
   } catch (error) {
     console.error("Error in POST /api/task:", error);
     return NextResponse.json(
@@ -243,4 +254,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
